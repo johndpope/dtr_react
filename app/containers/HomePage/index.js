@@ -1,10 +1,10 @@
 /*
  * HomePage
  *
- * This is the first thing users see of our App, at the '/' route
+ *
  */
 
-import React, { useEffect, memo } from 'react';
+import React, { memo } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { createStructuredSelector } from 'reselect';
@@ -15,39 +15,28 @@ import reducer from './reducer';
 import saga from './saga';
 
 import {
-  Avatar,
-  Container,
   CssBaseline,
+  AppBar,
+  Toolbar,
   Typography,
-  TextField,
-  FormControlLabel,
   Button,
-  Grid,
-  Box,
-  Link,
-  Checkbox,
-  Input,
-  InputLabel,
-  InputAdornment,
-  FormControl,
   IconButton,
-  ButtonGroup,
-  Paper,
-  Popper,
-  ClickAwayListener,
-  Grow,
-  MenuItem,
-  MenuList
+  Fab
 } from '@material-ui/core';
 
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import AccountCircle from '@material-ui/icons/AccountCircle';
-import Visibility from '@material-ui/icons/Visibility';
-import VisibilityOff from '@material-ui/icons/VisibilityOff';
-import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import MenuIcon from '@material-ui/icons/Menu';
+import GetAppIcon from '@material-ui/icons/GetApp';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 
-import { withStyles, createMuiTheme } from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
 import { DEFAULT_STYLES } from './constants';
+import MomentUtils from '@date-io/moment';
+
+import {
+  KeyboardDatePicker,
+  MuiPickersUtilsProvider,
+} from "@material-ui/pickers";
+import { exportExcel } from './actions';
 
 const key = 'home';
 
@@ -56,172 +45,151 @@ const styles = () => (DEFAULT_STYLES);
 const withReducer = injectReducer({ key, reducer });
 const withSaga = injectSaga({ key, saga });
 
-const options = ['Time In', 'Time Out', 'Login'];
-
-class HomePage extends React.PureComponent {
+class LoginPage extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      showPassword: false,
-      openGroup: false,
-      anchorRef: null,
-      selectedIndex: 0,
+      startDate: new Date(),
+      endDate: new Date(),
+      data: null,
+      url: null
     }
   }
 
-  handleClickShowPassword = () => {
-    this.setState({
-      showPassword: !this.state.showPassword
-    });
-  };
+  downloadBlob = (url, filename = 'interim.xlsx') => {
+    
+    // Create a new anchor element
+    const a = document.createElement('a');
+    
+    // Set the href and download attributes for the anchor element
+    // You can optionally set other attributes like `title`, etc
+    // Especially, if the anchor element will be attached to the DOM
+    a.href = url;
+    a.download = filename || 'interim.xlsx';
+    const clickHandler = () => {
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        this.removeEventListener('click', clickHandler);
+      }, 150);
+    };
+    
+    // Add the click event listener on the anchor element
+    // Comment out this line if you don't want a one-off download of the blob content
+    a.addEventListener('click', clickHandler, false);
+    
+    // Programmatically trigger a click on the anchor element
+    // Useful if you want the download to happen automatically
+    // Without attaching the anchor element to the DOM
+    // Comment out this line if you don't want an automatic download of the blob content
+    a.click();
+    
+    // Return the anchor element
+    // Useful if you want a reference to the element
+    // in order to attach it to the DOM or use it in some other way
+    return a;
+  }
 
-  handleMouseDownPassword = event => {
-    event.preventDefault();
-  };
-
-  handleMenuItemClick = (event, index) => {
+  handleStartDateChange = (date) => {
     this.setState({
-      selectedIndex: index,
-      openGroup: false,
+      startDate: date
     });
   }
 
-  handleToggle = () => {
+  handleEndDateChange = (date) => {
     this.setState({
-      openGroup: !this.state.openGroup,
+      endDate: date
     });
   }
 
-  handleClose = (event) => {
-    const { anchorRef } = this.state;
-
-    if (anchorRef && anchorRef.contains(event.target)) {
-      return;
-    }
-
-    this.setState({
-      openGroup: false,
+  handleExportExcel = async () => {
+    const { startDate, endDate } = this.state;
+    const { onExportExcel, userId } = this.props;
+    const response = await onExportExcel(startDate, endDate, userId);
+    const binaryData = [];
+    binaryData.push(response.data);
+    await this.setState({
+      data: response.data,
+      url: window.URL.createObjectURL(new Blob(binaryData))
     });
+    this.downloadBlob(this.state.url);
   }
 
   render() {
 
-    const { classes } = this.props;
-    const { showPassword, anchorRef, openGroup, selectedIndex } = this.state;
+    const { startDate, endDate } = this.state;
 
     return (
       <React.Fragment>
         <CssBaseline />
-
-        <Grid container justify="center" alignItems="center" className={classes.container}>
-          <Grid item container xs={12} md={4} alignItems="center" justify="center" className={classes.formContainer}>
-            <Grid item xs={12}>
-              <form className={classes.form} noValidate>
-                <Grid container justify="center" alignItems="center">
-                  <Grid item xs={12}>
-                    <TextField
-                      id="input-with-icon-textfield"
-                      label="Email"
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              aria-label="email"
-                            >
-                              <AccountCircle />
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                      fullWidth
-                      className={classes.input}
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12}>
-                    <TextField
-                      id="input-with-icon-textfield"
-                      label="Password"
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              aria-label="toggle password visibility"
-                              onClick={this.handleClickShowPassword}
-                              onMouseDown={this.handleMouseDownPassword}
-                            >
-                              {showPassword ? <Visibility /> : <VisibilityOff />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                      fullWidth
-                      className={classes.input}
-                      type={showPassword ? 'text' : 'password'}
-                    />
-                  </Grid>
-                  
-                  <Grid item container xs={12} style={{ marginTop: 20 }} alignItems="center" justify="center">
-                    <ButtonGroup fullWidth variant="contained" color="primary" ref={anchorRef} aria-label="split button">
-                      <Button style={{ width: '90%' }} onClick={this.handleClick}>{options[selectedIndex]}</Button>
-                      <Button
-                        color="primary"
-                        size="small"
-                        aria-owns={openGroup ? 'menu-list-grow' : undefined}
-                        aria-haspopup="true"
-                        onClick={this.handleToggle}
-                        style={{ width: '10%' }}
-                      >
-                        <ArrowDropDownIcon />
-                      </Button>
-                    </ButtonGroup>
-
-                    <Popper open={openGroup} anchorEl={anchorRef} transition disablePortal>
-                      {({ TransitionProps, placement }) => (
-                        <Grow
-                          {...TransitionProps}
-                          style={{
-                            transformOrigin: placement === 'bottom',
-                          }}
-                        >
-                          <Paper id="menu-list-grow" style={{ width: 200, marginTop: 0 }}>
-                            <ClickAwayListener onClickAway={this.handleClose}>
-                              <MenuList>
-                                {options.map((option, index) => (
-                                  <MenuItem
-                                    key={option}
-                                    selected={index === selectedIndex}
-                                    onClick={event => this.handleMenuItemClick(event, index)}
-                                  >
-                                    {option}
-                                  </MenuItem>
-                                ))}
-                              </MenuList>
-                            </ClickAwayListener>
-                          </Paper>
-                        </Grow>
-                      )}
-                    </Popper>
-                  </Grid>
-                  
-                </Grid>
-              </form>
-            </Grid>
+        <div style={{ flexGrow: 1 }}>
+          <AppBar position="static">
+            <Toolbar>
+              <IconButton edge="start" color="inherit" aria-label="menu">
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" style={{ flexGrow: 1 }}>
+                Home
+              </Typography>
+              <Button color="inherit">
+                <ExitToAppIcon />
+              </Button>
+            </Toolbar>
+          </AppBar>
+          <div style={{ padding: 20, paddingTop: 30 }}>
+            <MuiPickersUtilsProvider utils={MomentUtils}>
+              <div style={{ display: 'inline-block', marginLeft: 10 }}>
+                <KeyboardDatePicker
+                  autoOk
+                  variant="inline"
+                  inputVariant="outlined"
+                  label="Start Date"
+                  format="MM/DD/YYYY"
+                  value={startDate}
+                  InputAdornmentProps={{ position: "start" }}
+                  onChange={date => this.handleStartDateChange(date)}
+                  style={{  }}
+                />
+              </div>
             
-          </Grid>
-        </Grid>
+            <div style={{ display: 'inline-block', marginLeft: 15 }}>
+              <KeyboardDatePicker
+                autoOk
+                variant="inline"
+                inputVariant="outlined"
+                label="End Date"
+                format="MM/DD/YYYY"
+                value={endDate}
+                InputAdornmentProps={{ position: "start" }}
+                onChange={date => this.handleEndDateChange(date)}
+              />
+            </div>
+
+            {/* {
+              this.state.url && (
+                <a href={this.state.url} download="interim.xlsx">Download</a>
+              )
+            } */}
+            
+
+            <Fab color="primary" aria-label="add" style={{ position: 'absolute', bottom: 30, right: 30 }} onClick={this.handleExportExcel}>
+              <GetAppIcon />
+            </Fab>
+            
+            </MuiPickersUtilsProvider>
+          </div>
+        </div>
       </React.Fragment>
     )
   }
 }
 
-const mapStateToProps = createStructuredSelector({
-  
+const mapStateToProps = (state) => ({
+  userId: state.auth.user.id
 });
 
 export function mapDispatchToProps(dispatch) {
   return {
-    
+    onExportExcel: (startDate, endDate, userId) => dispatch(exportExcel(startDate, endDate, userId))
   };
 }
 
@@ -230,7 +198,7 @@ const withConnect = connect(
   mapDispatchToProps,
 );
 
-const styledComponent = withStyles(styles, { withTheme: true })(HomePage);
+const styledComponent = withStyles(styles, { withTheme: true })(LoginPage);
 
 export default compose(
   withConnect,

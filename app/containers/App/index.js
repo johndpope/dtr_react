@@ -10,17 +10,23 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
 
+import LoginPage from 'containers/LoginPage/Loadable';
 import HomePage from 'containers/HomePage/Loadable';
+
 import NotFoundPage from 'containers/NotFoundPage/Loadable';
 
+import PrivateRoute from '../../hoc/PrivateRoute';
+import PublicRoute from '../../hoc/PublicRoute';
+
 import GlobalStyle from '../../global-styles';
+
 
 export default function App() {
   return (
     <div>
       <Switch>
-        <Route exact path="/home" component={HomePage} />
-        <Route exact path="/" component={HomePage} />
+        <PrivateRoute exact path="/home" component={HomePage} />
+        <PublicRoute exact path="/" component={LoginPage} />
         <Route component={NotFoundPage} />
       </Switch>
       <GlobalStyle />
