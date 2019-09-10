@@ -4,7 +4,7 @@
  *
  */
 
-import { DEFAULT_ACTION, EXPORT_EXCEL } from './types';
+import { DEFAULT_ACTION, EXPORT_EXCEL, SET_RESPONSE } from './types';
 
 export function defaultAction() {
   return {
@@ -19,4 +19,11 @@ export const exportExcel = (startDate, endDate, userId) => {
     endDate,
     userId
   };
+}
+
+export const setResponse = (response) => {
+  return {
+    type: SET_RESPONSE,
+    response
+  }
 }

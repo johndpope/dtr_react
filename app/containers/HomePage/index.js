@@ -105,13 +105,13 @@ class LoginPage extends React.PureComponent {
     const { startDate, endDate } = this.state;
     const { onExportExcel, userId } = this.props;
     const response = await onExportExcel(startDate, endDate, userId);
-    const binaryData = [];
-    binaryData.push(response.data);
-    await this.setState({
-      data: response.data,
-      url: window.URL.createObjectURL(new Blob(binaryData))
-    });
-    this.downloadBlob(this.state.url);
+    // const binaryData = [];
+    // binaryData.push(response.data);
+    // await this.setState({
+    //   data: response.data,
+    //   url: window.URL.createObjectURL(new Blob(binaryData))
+    // });
+    // //this.downloadBlob(this.state.url);
   }
 
   render() {
@@ -164,11 +164,11 @@ class LoginPage extends React.PureComponent {
               />
             </div>
 
-            {/* {
+            {
               this.state.url && (
                 <a href={this.state.url} download="interim.xlsx">Download</a>
               )
-            } */}
+            }
             
 
             <Fab color="primary" aria-label="add" style={{ position: 'absolute', bottom: 30, right: 30 }} onClick={this.handleExportExcel}>

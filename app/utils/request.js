@@ -18,6 +18,16 @@ function checkStatus(response) {
     throw error;
 }
 
+export const postRequest = (url, options) => {
+    return axios.post(url, options)
+    .then(checkStatus)
+    .then(parseJSON);
+}
+
+export const getRequest = (url, options = {}) => {
+    return axios.get(url, options);
+}
+
 const request = (url, options) => {
     return axios.post(url, options)
     .then(checkStatus)
