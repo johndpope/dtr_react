@@ -21,12 +21,18 @@ import {
   Typography,
   Button,
   IconButton,
-  Fab
+  Fab,
+  Select,
+  MenuItem,
+  TextField,
+  CircularProgress
 } from '@material-ui/core';
 
 import MenuIcon from '@material-ui/icons/Menu';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import CheckIcon from '@material-ui/icons/Check';
+import SaveIcon from '@material-ui/icons/Save';
 
 import { withStyles } from '@material-ui/core/styles';
 import { DEFAULT_STYLES } from './constants';
@@ -36,7 +42,8 @@ import {
   KeyboardDatePicker,
   MuiPickersUtilsProvider,
 } from "@material-ui/pickers";
-import { exportExcel } from './actions';
+import { exportExcel, setLoading } from './actions';
+import { makeLogout } from '../LoginPage/actions';
 
 const key = 'home';
 
@@ -51,6 +58,10 @@ class LoginPage extends React.PureComponent {
     this.state = {
       startDate: new Date(),
       endDate: new Date(),
+      template: 1,
+      exportName: 'new_excel',
+      project: 'Command Center',
+      client: 'Metrobank',
       data: null,
       url: null
     }
@@ -101,10 +112,17 @@ class LoginPage extends React.PureComponent {
     });
   }
 
+  handleChangeTemplate = (e) => {
+    this.setState({
+      template: e.target.value
+    });
+  }
+
   handleExportExcel = async () => {
-    const { startDate, endDate } = this.state;
-    const { onExportExcel, userId } = this.props;
-    const response = await onExportExcel(startDate, endDate, userId);
+    const { startDate, endDate, template, exportName, client, project } = this.state;
+    const { onExportExcel } = this.props;
+    const userId = await sessionStorage.getItem('userId');
+    await onExportExcel({ startDate, endDate, userId, template, exportName, project, client });
     // const binaryData = [];
     // binaryData.push(response.data);
     // await this.setState({
@@ -114,9 +132,33 @@ class LoginPage extends React.PureComponent {
     // //this.downloadBlob(this.state.url);
   }
 
+  handleChangeExportName = (e) => {
+    this.setState({
+      exportName: e.target.value
+    });
+  }
+
+  handleChangeProject = (e) => {
+    this.setState({
+      project: e.target.value
+    });
+  }
+
+  handleChangeClient = (e) => {
+    this.setState({
+      client: e.target.value
+    });
+  }
+
+  handleLogout = () => {
+    const { onMakeLogout } = this.props;
+    onMakeLogout();
+  }
+
   render() {
 
-    const { startDate, endDate } = this.state;
+    const { startDate, endDate, template, exportName, project, client } = this.state;
+    const { loading } = this.props;
 
     return (
       <React.Fragment>
@@ -130,14 +172,14 @@ class LoginPage extends React.PureComponent {
               <Typography variant="h6" style={{ flexGrow: 1 }}>
                 Home
               </Typography>
-              <Button color="inherit">
+              <Button color="inherit" onClick={this.handleLogout}>
                 <ExitToAppIcon />
               </Button>
             </Toolbar>
           </AppBar>
           <div style={{ padding: 20, paddingTop: 30 }}>
             <MuiPickersUtilsProvider utils={MomentUtils}>
-              <div style={{ display: 'inline-block', marginLeft: 10 }}>
+              <div style={{ marginLeft: 15, marginTop: 20 }}>
                 <KeyboardDatePicker
                   autoOk
                   variant="inline"
@@ -151,7 +193,7 @@ class LoginPage extends React.PureComponent {
                 />
               </div>
             
-            <div style={{ display: 'inline-block', marginLeft: 15 }}>
+            <div style={{ marginLeft: 15, marginTop: 20 }}>
               <KeyboardDatePicker
                 autoOk
                 variant="inline"
@@ -164,6 +206,45 @@ class LoginPage extends React.PureComponent {
               />
             </div>
 
+            <div style={{ marginLeft: 15, marginTop: 20 }}>
+              <Select
+                value={template}
+                onChange={this.handleChangeTemplate}
+                style={{ width: 280 }}
+                // inputProps={{
+                //   name: 'age',
+                //   id: 'age-simple',
+                // }}
+              >
+                <MenuItem value={1}>Vertere Timesheets</MenuItem>
+                <MenuItem value={2}>Vertere DTR</MenuItem>
+              </Select>
+            </div>
+            
+            <div style={{ marginLeft: 15, marginTop: 20 }}>
+              <TextField
+                value={exportName}
+                onChange={this.handleChangeExportName}
+                style={{ width: 280 }}
+              />
+            </div>
+
+            <div style={{ marginLeft: 15, marginTop: 20 }}>
+              <TextField
+                value={project}
+                onChange={this.handleChangeProject}
+                style={{ width: 280 }}
+              />
+            </div>
+
+            <div style={{ marginLeft: 15, marginTop: 20 }}>
+              <TextField
+                value={client}
+                onChange={this.handleChangeClient}
+                style={{ width: 280 }}
+              />
+            </div>
+
             {
               this.state.url && (
                 <a href={this.state.url} download="interim.xlsx">Download</a>
@@ -172,7 +253,11 @@ class LoginPage extends React.PureComponent {
             
 
             <Fab color="primary" aria-label="add" style={{ position: 'absolute', bottom: 30, right: 30 }} onClick={this.handleExportExcel}>
-              <GetAppIcon />
+              {
+                !loading ? <GetAppIcon /> : (
+                  <CircularProgress color="white" size={24} />
+                )
+              }
             </Fab>
             
             </MuiPickersUtilsProvider>
@@ -184,12 +269,15 @@ class LoginPage extends React.PureComponent {
 }
 
 const mapStateToProps = (state) => ({
-  userId: state.auth.user.id
+  userId: state.auth.user.id,
+  loading: state.home.loading,
 });
 
 export function mapDispatchToProps(dispatch) {
   return {
-    onExportExcel: (startDate, endDate, userId) => dispatch(exportExcel(startDate, endDate, userId))
+    onExportExcel: (startDate, endDate, userId) => dispatch(exportExcel(startDate, endDate, userId)),
+    onSetLoading: (status) => dispatch(setLoading(status)),
+    onMakeLogout: () => dispatch(makeLogout()),
   };
 }
 

@@ -1,9 +1,11 @@
 import { call, put, select, takeLatest } from 'redux-saga/effects';
-import { MAKE_LOGIN, MAKE_TIME_IN, MAKE_TIME_OUT } from './types';
-import { setLogin } from './actions';
+import { MAKE_LOGIN, MAKE_TIME_IN, MAKE_TIME_OUT, MAKE_TODAY_LOGS, MAKE_LOGOUT } from './types';
+import { setLogin, setDialog, setRecords, setUser, setRecord, setLoading } from './actions';
 import request from 'utils/request';
+import { push } from 'react-router-redux';
 
 export function* makeLogin(action) {
+  yield put(setLoading(true));
   const { email, password } = action;
   const url = 'http://localhost:5000/users/login';
   const options = {
@@ -11,10 +13,16 @@ export function* makeLogin(action) {
     password
   };
   const auth = yield call(request, url, options);
+  
+  sessionStorage.setItem('token', auth.data.token);
+  sessionStorage.setItem('userId', auth.data.user.id);
   yield put(setLogin(auth.data.token, auth.data.user));
+  yield put(setLoading(false));
+  yield put(push('/home'));
 }
 
 export function* makeTimeIn(action) {
+  yield put(setLoading(true));
   const { email, password } = action;
   const url = 'http://localhost:5000/record/timein';
   const options = {
@@ -22,11 +30,16 @@ export function* makeTimeIn(action) {
     password
   };
   const response = yield call(request, url, options);
-  console.log(response);
-  alert(`Hello ${email}, you successfully time in`);
+  yield put(setLoading(false));
+  yield put(setRecords(response.data.records));
+  yield put(setRecord(response.data.currentRecord));
+  yield put(setUser(response.data.callingUser));
+  yield put(setDialog(true));
+  // alert(`Hello ${email}, you successfully time in`);
 }
 
 export function* makeTimeOut(action) {
+  yield put(setLoading(true));
   const { email, password } = action;
   const url = 'http://localhost:5000/record/timeout';
   const options = {
@@ -34,12 +47,43 @@ export function* makeTimeOut(action) {
     password
   };
   const response = yield call(request, url, options);
-  console.log(response);
-  alert(`Hello ${email}, you successfully time out`);
+
+  yield put(setLoading(false));
+  yield put(setRecords(response.data.records));
+  yield put(setRecord(response.data.currentRecord));
+  yield put(setUser(response.data.callingUser));
+  yield put(setDialog(true));
+  // alert(`Hello ${email}, you successfully time out`);
+}
+
+export function* makeTodayLogs(action) {
+  yield put(setLoading(true));
+  const { email, password } = action;
+  const url = 'http://localhost:5000/record/today_logs';
+  const options = {
+    email,
+    password
+  };
+  const response = yield call(request, url, options);
+
+  yield put(setLoading(false));
+  yield put(setRecords(response.data.records));
+  yield put(setRecord(response.data.currentRecord));
+  yield put(setUser(response.data.callingUser));
+  yield put(setDialog(true));
+  // alert(`Hello ${email}, you successfully time in`);
+}
+
+export function* makeLogout() {
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('userId');
+  yield put(push('/'));
 }
 
 export default function* loginSaga() {
   yield takeLatest(MAKE_LOGIN, makeLogin);
   yield takeLatest(MAKE_TIME_IN, makeTimeIn);
   yield takeLatest(MAKE_TIME_OUT, makeTimeOut);
+  yield takeLatest(MAKE_TODAY_LOGS, makeTodayLogs);
+  yield takeLatest(MAKE_LOGOUT, makeLogout);
 }

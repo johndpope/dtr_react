@@ -8,10 +8,13 @@ import React, { useEffect, memo } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { createStructuredSelector } from 'reselect';
-import { makeLogin, makeTimeIn, makeTimeOut } from './actions';
+import { makeLogin, makeTimeIn, makeTimeOut, setDialog, setUser, setRecords, setRecord, makeTodayLogs, setLoading } from './actions';
 
 import injectSaga from 'utils/injectSaga'
 import saga from './saga';
+
+import ProfileImage from '../../images/profile.png';
+import moment from 'moment';
 
 import {
   Avatar,
@@ -36,7 +39,16 @@ import {
   ClickAwayListener,
   Grow,
   MenuItem,
-  MenuList
+  MenuList,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  CircularProgress
 } from '@material-ui/core';
 
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
@@ -54,8 +66,8 @@ const styles = () => (DEFAULT_STYLES);
 
 const withSaga = injectSaga({ key, saga });
 
-const options = ['Time In', 'Time Out', 'Login'];
-
+const options = ['Time In', 'Time Out', 'Login', 'Check Today Logs'];
+let dialogTimer;
 class LoginPage extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -64,6 +76,7 @@ class LoginPage extends React.PureComponent {
       openGroup: false,
       anchorRef: null,
       selectedIndex: 0,
+      countInterval: 10,
       email: '',
       password: '',
     }
@@ -106,7 +119,9 @@ class LoginPage extends React.PureComponent {
 
   handleClick = () => {
     const { selectedIndex, email, password } = this.state;
-    const { onMakeLogin, onMakeTimeIn, onMakeTimeOut } = this.props;
+    const { onMakeLogin, onMakeTimeIn, onMakeTimeOut, onMakeTodayLogs, onSetLoading } = this.props;
+
+    onSetLoading(true);
 
     if (selectedIndex === 0) {
       onMakeTimeIn(email, password);
@@ -118,6 +133,10 @@ class LoginPage extends React.PureComponent {
 
     if (selectedIndex === 2) {
       onMakeLogin(email, password);
+    }
+
+    if (selectedIndex === 3) {
+      onMakeTodayLogs(email, password);
     }
   }
 
@@ -133,10 +152,42 @@ class LoginPage extends React.PureComponent {
     });
   }
 
+  handleOpenDialog = () => {
+    dialogTimer = setInterval(() => {
+      if (this.state.countInterval === 0) {
+        this.setState({
+          countInterval: 10
+        }, () => {
+          this.props.onSetDialog(false);
+          this.props.onSetUser({});
+          this.props.onSetRecords([]);
+          this.props.onSetRecord({});
+          clearInterval(dialogTimer);
+        });
+      } else {
+        this.setState({
+          countInterval: this.state.countInterval - 1
+        });
+      }
+    }, 1000);
+  }
+
+  handleCloseDialog = () => {
+    this.setState({
+      countInterval: 10
+    }, () => {
+      this.props.onSetDialog(false);
+      this.props.onSetUser({});
+      this.props.onSetRecords([]);
+      this.props.onSetRecord({});
+      clearInterval(dialogTimer);
+    });
+  }
+
   render() {
 
-    const { classes } = this.props;
-    const { showPassword, anchorRef, openGroup, selectedIndex } = this.state;
+    const { classes, openDialog, user, records, record, loading } = this.props;
+    const { showPassword, anchorRef, openGroup, selectedIndex, countInterval } = this.state;
 
     return (
       <React.Fragment>
@@ -196,7 +247,11 @@ class LoginPage extends React.PureComponent {
                   
                   <Grid item container xs={12} style={{ marginTop: 20 }} alignItems="center" justify="center">
                     <ButtonGroup fullWidth variant="contained" color="primary" ref={anchorRef} aria-label="split button">
-                      <Button style={{ width: '90%' }} onClick={this.handleClick}>{options[selectedIndex]}</Button>
+                      <Button style={{ width: '90%' }} onClick={this.handleClick}>{
+                        !loading ? options[selectedIndex] : (
+                          <CircularProgress size={24} color="white" />
+                        ) 
+                      }</Button>
                       <Button
                         color="primary"
                         size="small"
@@ -241,6 +296,73 @@ class LoginPage extends React.PureComponent {
               </form>
             </Grid>
             
+            <Dialog open={openDialog} onEnter={this.handleOpenDialog}>
+              <DialogContent style={{ height: 700, width: 450 }}>
+                <span onClick={this.handleCloseDialog}>X</span>
+                <Grid container justify="center" alignItems="center">
+                  <Grid item xs={12} style={{ height: 60 }}>
+                    <Typography style={{ textAlign: 'center', fontSize: 25, color: 'gray' }}>
+                      {user.hasOwnProperty('firstName') ? `${user.firstName} ${user.lastName}` : ''}
+                    </Typography>
+                  </Grid>
+
+                  {
+                    user.hasOwnProperty('profilePic') ? (
+                      <Avatar src={`http://localhost:5000/images/${user.profilePic}`} style={{ height: 100, width: 100 }} />
+                    ) : (
+                      <Avatar src={ProfileImage} style={{ height: 80, width: 80 }} />
+                    )
+                  }
+                  
+
+                  {
+                    record && Object.keys(record).length > 0 && !record.hasOwnProperty('timeoutDate') ? 
+                    (
+                      <Grid item xs={12} style={{ height: 80, marginTop: 20 }}>
+                        <Typography style={{ textAlign: 'center', fontSize: 35, color: 'orange' }}>
+                          {Object.keys(record).length > 0 ? `${moment(record.timeInDate).format('MMMM DD, YYYY hh:mm a')}` : ''}
+                        </Typography>
+                      </Grid>      
+                    ) : (
+                      <Grid item xs={12} style={{ height: 80, marginTop: 20 }}>
+                        <Typography style={{ textAlign: 'center', fontSize: 35, color: 'orange' }}>
+                          {Object.keys(record).length > 0 ? `${moment(record.timeoutDate).format('MMMM DD, YYYY hh:mm a')}` : ''}
+                        </Typography>
+                      </Grid>
+                    )
+                  }
+                  
+                  <Table className={classes.table} style={{ marginTop: 35 }}>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Time In</TableCell>
+                        <TableCell>Time Out</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {
+                        records.map((rec, index) => {
+                          return (
+                            <TableRow key={index}>
+                              <TableCell component="th" scope="row">
+                                {rec.hasOwnProperty('timeInDate') && moment(rec.timeInDate).format('hh:mm a')}
+                              </TableCell>
+                              <TableCell component="th" scope="row">
+                                {rec.hasOwnProperty('timeoutDate') && moment(rec.timeoutDate).format('hh:mm a')}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })
+                      } 
+                    </TableBody>
+                  </Table>                        
+
+                  <Typography style={{ position: 'absolute', bottom: 40, right: 30, fontSize: 20, color: 'gray' }}>
+                    {countInterval}
+                  </Typography>
+                </Grid>
+              </DialogContent>
+            </Dialog>
           </Grid>
         </Grid>
       </React.Fragment>
@@ -248,15 +370,25 @@ class LoginPage extends React.PureComponent {
   }
 }
 
-const mapStateToProps = createStructuredSelector({
-  
+const mapStateToProps = (state) => ({
+  openDialog: state.auth.openDialog,
+  user: state.auth.currentUser,
+  records: state.auth.records,
+  record: state.auth.record,
+  loading: state.auth.loading,
 });
 
 export function mapDispatchToProps(dispatch) {
   return {
     onMakeLogin: (email, password) => dispatch(makeLogin(email, password)),
     onMakeTimeIn: (email, password) => dispatch(makeTimeIn(email, password)),
-    onMakeTimeOut: (email, password) => dispatch(makeTimeOut(email, password))
+    onMakeTimeOut: (email, password) => dispatch(makeTimeOut(email, password)),
+    onMakeTodayLogs: (email, password) => dispatch(makeTodayLogs(email, password)),
+    onSetDialog: (status) => dispatch(setDialog(status)),
+    onSetUser: (user) => dispatch(setUser(user)),
+    onSetRecords: (records) => dispatch(setRecords(records)),
+    onSetRecord: (record) => dispatch(setRecord(record)),
+    onSetLoading: (status) => dispatch(setLoading(status)),
   };
 }
 

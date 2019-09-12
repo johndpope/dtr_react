@@ -15,7 +15,20 @@
  *    }
  */
 
-import { CHANGE_USERNAME, MAKE_LOGIN, SET_LOGIN, MAKE_TIME_IN, MAKE_TIME_OUT } from './types';
+import { 
+  CHANGE_USERNAME, 
+  MAKE_LOGIN, 
+  SET_LOGIN, 
+  MAKE_TIME_IN, 
+  MAKE_TIME_OUT, 
+  MAKE_TODAY_LOGS, 
+  SET_DIALOG, 
+  SET_USER, 
+  SET_RECORDS, 
+  SET_RECORD, 
+  SET_LOADING,
+  MAKE_LOGOUT
+} from './types';
 
 /**
  * Changes the input field of the form
@@ -49,8 +62,43 @@ export const makeTimeOut = (email, password) => ({
   password
 });
 
+export const makeTodayLogs = (email, password) => ({
+  type: MAKE_TODAY_LOGS,
+  email,
+  password
+});
+
 export const setLogin = (token, user) => ({
   type: SET_LOGIN,
   token,
   user
+});
+
+export const setDialog = (status) => ({
+  type: SET_DIALOG,
+  status
+});
+
+export const setUser = (user) => ({
+  type: SET_USER,
+  user
+});
+
+export const setRecords = (records) => ({
+  type: SET_RECORDS,
+  records
+});
+
+export const setRecord = (record) => ({
+  type: SET_RECORD,
+  record
+});
+
+export const setLoading = (status) => ({
+  type: SET_LOADING,
+  status
+});
+
+export const makeLogout = () => ({
+  type: MAKE_LOGOUT
 });

@@ -1,13 +1,13 @@
 import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
-import { connect } from 'react-redux';
 
 const PublicRoute = ({ component: Component, ...rest }) => {
+    let token = sessionStorage.getItem('token');
     return (
         <Route
             {...rest}
             render={
-                (props) => !rest.auth.token ? (
+                (props) => !token ? (
                     <Component {...props} />
                 ) :
                 (
@@ -23,8 +23,4 @@ const PublicRoute = ({ component: Component, ...rest }) => {
     )
 }
 
-const mapStateToProps = (state) => ({
-    auth: state.auth
-});
-
-export default connect(mapStateToProps)(PublicRoute);
+export default PublicRoute;

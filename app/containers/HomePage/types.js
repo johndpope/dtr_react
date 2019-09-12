@@ -1,3 +1,4 @@
 export const DEFAULT_ACTION = 'DEFAULT_ACTION';
 export const EXPORT_EXCEL = 'EXPORT_EXCEL';
 export const SET_RESPONSE = 'SET_RESPONSE';
+export const SET_LOADING = 'SET_LOADING';
