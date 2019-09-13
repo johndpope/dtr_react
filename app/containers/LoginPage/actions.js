@@ -50,16 +50,14 @@ export const makeLogin = (email, password) => ({
   password
 });
 
-export const makeTimeIn = (email, password) => ({
+export const makeTimeIn = (payload) => ({
   type: MAKE_TIME_IN,
-  email,
-  password
+  payload
 });
 
-export const makeTimeOut = (email, password) => ({
+export const makeTimeOut = (payload) => ({
   type: MAKE_TIME_OUT,
-  email,
-  password
+  payload
 });
 
 export const makeTodayLogs = (email, password) => ({

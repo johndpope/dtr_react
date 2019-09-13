@@ -118,11 +118,11 @@ class LoginPage extends React.PureComponent {
     });
   }
 
-  handleExportExcel = async () => {
+  handleExportExcel = async (sendEmail = false) => {
     const { startDate, endDate, template, exportName, client, project } = this.state;
     const { onExportExcel } = this.props;
     const userId = await sessionStorage.getItem('userId');
-    await onExportExcel({ startDate, endDate, userId, template, exportName, project, client });
+    await onExportExcel({ startDate, endDate, userId, template, exportName, project, client, sendEmail });
     // const binaryData = [];
     // binaryData.push(response.data);
     // await this.setState({
@@ -259,6 +259,14 @@ class LoginPage extends React.PureComponent {
                 )
               }
             </Fab>
+
+            {/* <Fab color="primary" aria-label="add" style={{ position: 'absolute', bottom: 30, right: 100 }} onClick={() => this.handleExportExcel(true)}>
+              {
+                !loading ? <GetAppIcon /> : (
+                  <CircularProgress color="white" size={24} />
+                )
+              }
+            </Fab> */}
             
             </MuiPickersUtilsProvider>
           </div>

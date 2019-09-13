@@ -16,6 +16,13 @@ import saga from './saga';
 import ProfileImage from '../../images/profile.png';
 import moment from 'moment';
 
+import MomentUtils from '@date-io/moment';
+
+import {
+  DateTimePicker,
+  MuiPickersUtilsProvider,
+} from "@material-ui/pickers";
+
 import {
   Avatar,
   Container,
@@ -48,7 +55,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  CircularProgress
+  CircularProgress,
 } from '@material-ui/core';
 
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
@@ -79,6 +86,9 @@ class LoginPage extends React.PureComponent {
       countInterval: 10,
       email: '',
       password: '',
+      timeDate: null,
+      remarks: '',
+      customDate: false,
     }
   }
 
@@ -117,18 +127,28 @@ class LoginPage extends React.PureComponent {
     });
   }
 
+  handleTimeDateChange = (date) => {
+    this.setState({
+      timeDate: date
+    });
+  }
+
   handleClick = () => {
-    const { selectedIndex, email, password } = this.state;
+    const { selectedIndex, email, password, timeDate, remarks, customDate } = this.state;
     const { onMakeLogin, onMakeTimeIn, onMakeTimeOut, onMakeTodayLogs, onSetLoading } = this.props;
 
     onSetLoading(true);
 
     if (selectedIndex === 0) {
-      onMakeTimeIn(email, password);
+      onMakeTimeIn({
+        email, password, time: timeDate, remarks, customDate
+      });
     }
 
     if (selectedIndex === 1) {
-      onMakeTimeOut(email, password);
+      onMakeTimeOut({
+        email, password, time: timeDate, remarks, customDate
+      });
     }
 
     if (selectedIndex === 2) {
@@ -184,10 +204,22 @@ class LoginPage extends React.PureComponent {
     });
   }
 
+  handleChangeRemarks = (e) => {
+    this.setState({
+      remarks: e.target.value
+    });  
+  }
+
+  handleCheckCustomDate = (e) => {
+    this.setState({
+      customDate: e.target.checked
+    });
+  }
+
   render() {
 
     const { classes, openDialog, user, records, record, loading } = this.props;
-    const { showPassword, anchorRef, openGroup, selectedIndex, countInterval } = this.state;
+    const { showPassword, anchorRef, openGroup, selectedIndex, countInterval, timeDate, remarks, customDate } = this.state;
 
     return (
       <React.Fragment>
@@ -242,6 +274,39 @@ class LoginPage extends React.PureComponent {
                       type={showPassword ? 'text' : 'password'}
                       value={this.state.password}
                       onChange={this.handleChangePassword}
+                    />
+                  </Grid>
+
+                  <Grid item xs={10}>
+                    <MuiPickersUtilsProvider utils={MomentUtils}>
+                      <DateTimePicker 
+                        value={timeDate} 
+                        onChange={this.handleTimeDateChange} 
+                        label="Pick Time" 
+                        style={{ marginTop: 0, marginLeft: 5, width: '100%' }}
+                      />
+                    </MuiPickersUtilsProvider>
+                  </Grid>
+
+                  <Grid item xs={2} style={{ paddingTop: 20, paddingLeft: 20 }}>
+                    <Checkbox
+                      checked={customDate}
+                      onChange={this.handleCheckCustomDate}
+                      value="checkedA"
+                      inputProps={{
+                        'aria-label': 'primary checkbox',
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      value={remarks}
+                      onChange={this.handleChangeRemarks}
+                      fullWidth
+                      placeholder="Remarks"
+                      type="text"
+                      style={{ marginTop: 15, marginLeft: 5 }}
                     />
                   </Grid>
                   

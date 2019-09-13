@@ -18,7 +18,7 @@ const downloadFile = (url, param) => {
 
 export function* makeExportExcel(action) {
   yield put(setLoading(true));
-  const { startDate, endDate, userId, template, exportName, project, client } = action.param;
+  const { startDate, endDate, userId, template, exportName, project, client, sendEmail } = action.param;
   let startMoment = moment(startDate);
   startMoment.set({hour:0,minute:0,second:0,millisecond:999});
   let endMoment = moment(endDate);
@@ -30,7 +30,8 @@ export function* makeExportExcel(action) {
     userId,
     template,
     project,
-    client
+    client,
+    sendEmail
   };
   const response = yield call(downloadFile, url, param);
 
