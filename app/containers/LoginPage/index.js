@@ -765,16 +765,14 @@ class LoginPage extends React.PureComponent {
                           <Typography style={{ textAlign: 'center', fontSize: 35, color: 'orange' }}>
                             {Object.keys(record).length > 0 ? `${moment(record.timeInDate).format('MMMM DD, YYYY hh:mm a')}` : ''}
                       </Typography>
-                        </Grid>      
+                    </Grid>      
                   ) : (
                     <Grid item xs={12} style={{ height: 80, marginTop: 20 }}>
                           <Typography style={{ textAlign: 'center', fontSize: 35, color: 'orange' }}>
                             {Object.keys(record).length > 0 ? `${moment(record.timeoutDate).format('MMMM DD, YYYY hh:mm a')}` : ''}
                           </Typography>
                         </Grid>
-                      )
-                    </Grid>
-                  )}
+                      )}
 
                   <Table className={classes.table} style={{ marginTop: 35 }}>
                     <TableHead>
