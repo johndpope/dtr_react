@@ -23,6 +23,11 @@ import {
   MuiPickersUtilsProvider,
 } from "@material-ui/pickers";
 
+import SpeechRecognition from "react-speech-recognition";
+import { loadModels, getFullFaceDescription, createMatcher } from '../../api/face';
+
+import Webcam from 'react-webcam';
+
 import {
   Avatar,
   Container,
@@ -66,6 +71,25 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 
 import { withStyles, createMuiTheme } from '@material-ui/core/styles';
 import { DEFAULT_STYLES } from './constants';
+// import * as faceapi from 'face-api.js';
+// const MODEL_URL = 'models';
+
+// const testImg = require('../../images/test.jpg');
+
+const JSON_PROFILE = require('../../descriptors/bnk48.json');
+
+const WIDTH = 420;
+const HEIGHT = 420;
+const inputSize = 160;
+
+// Initial State
+// const INIT_STATE = {
+//   imageURL: testImg,
+//   fullDesc: null,
+//   detections: null,
+//   descriptors: null,
+//   match: null
+// };
 
 const key = 'login';
 
@@ -78,6 +102,7 @@ let dialogTimer;
 class LoginPage extends React.PureComponent {
   constructor(props) {
     super(props);
+    this.webcam = React.createRef();
     this.state = {
       showPassword: false,
       openGroup: false,
@@ -89,6 +114,148 @@ class LoginPage extends React.PureComponent {
       timeDate: null,
       remarks: '',
       customDate: false,
+      transcript: '',
+      fullDesc: null,
+      detections: null,
+      descriptors: null,
+      faceMatcher: null,
+      match: null,
+      facingMode: null,
+      newDescriptors: null,
+    }
+  }
+
+  componentWillMount = async () => {
+    await loadModels();
+    this.setState({ faceMatcher: await createMatcher(JSON_PROFILE) });
+    this.setInputDevice();
+  };
+
+  setInputDevice = async () => {
+    await this.setState({
+      facingMode: 'user'
+    });
+
+    this.startCapture();
+    // navigator.mediaDevices.enumerateDevices().then(async devices => {
+    //   let inputDevice = await devices.filter(
+    //     device => device.kind === 'videoinput'
+    //   );
+    //   if (inputDevice.length < 2) {
+    //     await this.setState({
+    //       facingMode: 'user'
+    //     });
+    //   } else {
+    //     await this.setState({
+    //       facingMode: { exact: 'environment' }
+    //     });
+    //   }
+    //   this.startCapture();
+    // });
+  };
+
+  startCapture = () => {
+    this.interval = setInterval(() => {
+      this.capture();
+    }, 1500);
+  };
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  capture = async () => {
+    if (!!this.webcam.current) {
+      await getFullFaceDescription(
+        this.webcam.current.getScreenshot(),
+        inputSize
+      ).then(fullDesc => {
+        if (!!fullDesc) {
+          this.setState({
+            detections: fullDesc.map(fd => fd.detection),
+            descriptors: fullDesc.map(fd => fd.descriptor)
+          });
+        }
+      });
+
+      if (!!this.state.descriptors && !!this.state.faceMatcher) {
+        let match = await this.state.descriptors.map(descriptor =>
+          this.state.faceMatcher.findBestMatch(descriptor)
+        );
+        this.setState({ match });
+      }
+    }
+  };
+
+  saveDescriptor = async () => {
+    if (!!this.webcam.current) {
+      await getFullFaceDescription(
+        this.webcam.current.getScreenshot(),
+        inputSize
+      ).then(async (fullDesc) => {
+        if (!!fullDesc) {
+          const descriptor = fullDesc.map(fd => fd.descriptor);
+          const newProfile = {
+            Alvin: {
+              name: "alvin",
+              descriptors: descriptor
+            }
+          };
+          this.setState({
+            newDescriptors: newProfile,
+            faceMatcher: await createMatcher(newProfile),
+            // detections: fullDesc.map(fd => fd.detection),
+            // descriptors: fullDesc.map(fd => fd.descriptor)
+          });
+        }
+      });
+
+      // if (!!this.state.descriptors && !!this.state.faceMatcher) {
+      //   let match = await this.state.descriptors.map(descriptor =>
+      //     this.state.faceMatcher.findBestMatch(descriptor)
+      //   );
+      //   this.setState({ match });
+      // }
+    }
+  }
+  
+  // handleImage = async (image = this.state.imageURL) => {
+  //   await getFullFaceDescription(image).then(fullDesc => {
+  //     if (!!fullDesc) {
+  //       this.setState({
+  //         fullDesc,
+  //         detections: fullDesc.map(fd => fd.detection),
+  //         descriptors: fullDesc.map(fd => fd.descriptor)
+  //       });
+  //     }
+  //   });
+
+  //   if (!!this.state.descriptors && !!this.state.faceMatcher) {
+  //     let match = await this.state.descriptors.map(descriptor =>
+  //       this.state.faceMatcher.findBestMatch(descriptor)
+  //     );
+  //     this.setState({ match });
+  //   }
+  // };
+
+  // handleFileChange = async event => {
+  //   this.resetState();
+  //   await this.setState({
+  //     imageURL: URL.createObjectURL(event.target.files[0]),
+  //     loading: true
+  //   });
+  //   this.handleImage();
+  // };
+
+  // resetState = () => {
+  //   this.setState({ ...INIT_STATE });
+  // };
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.transcript.includes('time in')) {
+      alert('time in');
+    } else if(nextProps.transcript.includes('time in')) {
+      alert('time out');
     }
   }
 
@@ -219,7 +386,66 @@ class LoginPage extends React.PureComponent {
   render() {
 
     const { classes, openDialog, user, records, record, loading } = this.props;
-    const { showPassword, anchorRef, openGroup, selectedIndex, countInterval, timeDate, remarks, customDate } = this.state;
+    const { showPassword, anchorRef, openGroup, selectedIndex, countInterval, timeDate, remarks, customDate, detections, match, facingMode } = this.state;
+
+    // if (!browserSupportsSpeechRecognition) {
+    //   return null;
+    // }
+
+    let videoConstraints = null;
+    let camera = '';
+    if (!!facingMode) {
+      videoConstraints = {
+        width: WIDTH,
+        height: HEIGHT,
+        facingMode: facingMode
+      };
+      if (facingMode === 'user') {
+        camera = 'Front';
+      } else {
+        camera = 'Back';
+      }
+    }
+
+    let drawBox = null;
+    if (!!detections) {
+      drawBox = detections.map((detection, i) => {
+        let _H = detection.box.height;
+        let _W = detection.box.width;
+        let _X = detection.box._x;
+        let _Y = detection.box._y;
+        return (
+          <div key={i}>
+            <div
+              style={{
+                position: 'absolute',
+                border: 'solid',
+                borderColor: 'blue',
+                height: _H,
+                width: _W,
+                transform: `translate(${_X}px,${_Y}px)`
+              }}
+            >
+              {!!match && !!match[i] ? (
+                <p
+                  style={{
+                    backgroundColor: 'blue',
+                    border: 'solid',
+                    borderColor: 'blue',
+                    width: _W,
+                    marginTop: 0,
+                    color: '#fff',
+                    transform: `translate(-3px,${_H}px)`
+                  }}
+                >
+                  {match[i]._label}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        );
+      });
+    }
 
     return (
       <React.Fragment>
@@ -359,6 +585,43 @@ class LoginPage extends React.PureComponent {
                   
                 </Grid>
               </form>
+              {/* <span>{this.props.listening ? 'listening': 'not listening'}</span> */}
+              {/* <p>{`Transcript: ${this.props.transcript}`}</p> */}
+              <div
+                className="Camera"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center'
+                }}
+              >
+                <p>Camera: {camera}</p>
+                <div
+                  style={{
+                    width: WIDTH,
+                    height: HEIGHT
+                  }}
+                >
+                  <div style={{ position: 'relative', width: WIDTH }}>
+                    {!!videoConstraints ? (
+                      <div style={{ position: 'absolute' }}>
+                        <Webcam
+                          audio={false}
+                          width={WIDTH}
+                          height={HEIGHT}
+                          ref={this.webcam}
+                          screenshotFormat="image/jpeg"
+                          videoConstraints={videoConstraints}
+                        />
+                      </div>
+                    ) : null}
+                    {!!drawBox ? drawBox : null}
+                    <Button onClick={this.saveDescriptor}>
+                      Save Descriptor
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </Grid>
             
             <Dialog open={openDialog} onEnter={this.handleOpenDialog}>
@@ -463,6 +726,7 @@ const withConnect = connect(
 );
 
 const styledComponent = withStyles(styles, { withTheme: true })(LoginPage);
+const speechEnabled = SpeechRecognition(styledComponent);
 
 export default compose(
   withConnect,

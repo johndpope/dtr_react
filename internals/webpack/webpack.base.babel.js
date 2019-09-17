@@ -6,6 +6,9 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = options => ({
+  node: {
+    fs: 'empty'
+  },
   mode: options.mode,
   entry: options.entry,
   output: Object.assign(
@@ -112,12 +115,12 @@ module.exports = options => ({
     // inside your code for any environment checks; Terser will automatically
     // drop any unreachable code.
     new webpack.EnvironmentPlugin({
-      NODE_ENV: 'development',
+      NODE_ENV: 'development'
     }),
   ]),
   resolve: {
     modules: ['node_modules', 'app'],
-    extensions: ['.js', '.jsx', '.react.js'],
+    extensions: ['.js', '.jsx', '.react.js', '.ts', '.tsx'],
     mainFields: ['browser', 'jsnext:main', 'main'],
   },
   devtool: options.devtool,

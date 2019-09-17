@@ -24,7 +24,6 @@ export function* makeLogin(action) {
 export function* makeTimeIn(action) {
   yield put(setLoading(true));
   const { email, password, time, remarks, customDate } = action.payload;
-  console.log('action', action);
   const url = 'http://localhost:5000/record/timein';
   const options = {
     email,

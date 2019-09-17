@@ -35,6 +35,8 @@ app.get('*.js', (req, res, next) => {
   next();
 });
 
+// app.use('/public', express.static('public'));
+
 // Start your app.
 app.listen(port, host, async err => {
   if (err) {

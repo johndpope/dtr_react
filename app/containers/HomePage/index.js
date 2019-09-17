@@ -13,6 +13,7 @@ import injectSaga from 'utils/injectSaga'
 import injectReducer from 'utils/injectReducer'
 import reducer from './reducer';
 import saga from './saga';
+import moment from 'moment';
 
 import {
   CssBaseline,
@@ -55,11 +56,21 @@ const withSaga = injectSaga({ key, saga });
 class LoginPage extends React.PureComponent {
   constructor(props) {
     super(props);
+
+    const date = new Date();
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+
+    const start = moment(firstDay).format('ll');
+    const end = moment().format('ll');
+    let name = 'new_excel';
+    
+    name = `Official Timesheet ${start} - ${end}`;
+
     this.state = {
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: firstDay,
+      endDate: date,
       template: 1,
-      exportName: 'new_excel',
+      exportName: name,
       project: 'Command Center',
       client: 'Metrobank',
       data: null,
@@ -101,21 +112,45 @@ class LoginPage extends React.PureComponent {
   }
 
   handleStartDateChange = (date) => {
+    const name = this.generateFileName(this.state.template, date, this.state.endDate);
+
     this.setState({
-      startDate: date
+      startDate: date,
+      exportName: name
     });
   }
 
   handleEndDateChange = (date) => {
+    const name = this.generateFileName(this.state.template, this.state.startDate, date);
+
     this.setState({
-      endDate: date
+      endDate: date,
+      exportName: name
     });
   }
 
   handleChangeTemplate = (e) => {
+    const value = e.target.value;
+    const name = this.generateFileName(value, this.state.startDate, this.state.endDate);
+
     this.setState({
-      template: e.target.value
+      template: value,
+      exportName: name,
     });
+  }
+
+  generateFileName = (template, startDate, endDate) => {
+    let name = this.state.exportName;
+    const start = moment(startDate).format('ll');
+    const end = moment(endDate).format('ll');
+
+    if(template === 1) {
+      name = `Official Timesheet ${start} - ${end}`;
+    } else if (template === 2) {
+      name = `Official DTR ${start} - ${end}`;
+    }
+
+    return name;
   }
 
   handleExportExcel = async (sendEmail = false) => {
