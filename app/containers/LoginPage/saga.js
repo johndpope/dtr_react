@@ -1,8 +1,23 @@
 import { call, put, select, takeLatest } from 'redux-saga/effects';
-import { MAKE_LOGIN, MAKE_TIME_IN, MAKE_TIME_OUT, MAKE_TODAY_LOGS, MAKE_LOGOUT } from './types';
-import { setLogin, setDialog, setRecords, setUser, setRecord, setLoading } from './actions';
-import request from 'utils/request';
+import request, { getRequest } from 'utils/request';
 import { push } from 'react-router-redux';
+import {
+  MAKE_LOGIN,
+  MAKE_TIME_IN,
+  MAKE_TIME_OUT,
+  MAKE_TODAY_LOGS,
+  MAKE_LOGOUT,
+  MAKE_GET_DESCRIPTORS,
+} from './types';
+import {
+  setLogin,
+  setDialog,
+  setRecords,
+  setUser,
+  setRecord,
+  setLoading,
+  setDescriptors,
+} from './actions';
 
 export function* makeLogin(action) {
   yield put(setLoading(true));
@@ -10,10 +25,10 @@ export function* makeLogin(action) {
   const url = 'http://localhost:5000/users/login';
   const options = {
     email,
-    password
+    password,
   };
   const auth = yield call(request, url, options);
-  
+
   sessionStorage.setItem('token', auth.data.token);
   sessionStorage.setItem('userId', auth.data.user.id);
   yield put(setLogin(auth.data.token, auth.data.user));
@@ -30,7 +45,7 @@ export function* makeTimeIn(action) {
     password,
     time,
     remarks,
-    customDate
+    customDate,
   };
   const response = yield call(request, url, options);
   yield put(setLoading(false));
@@ -50,7 +65,7 @@ export function* makeTimeOut(action) {
     password,
     time,
     remarks,
-    customDate
+    customDate,
   };
   const response = yield call(request, url, options);
 
@@ -68,7 +83,7 @@ export function* makeTodayLogs(action) {
   const url = 'http://localhost:5000/record/today_logs';
   const options = {
     email,
-    password
+    password,
   };
   const response = yield call(request, url, options);
 
@@ -86,10 +101,21 @@ export function* makeLogout() {
   yield put(push('/'));
 }
 
+export function* makeGetDescriptors() {
+  const url = 'http://localhost:5000/descriptors';
+  const response = yield call(getRequest, url);
+  if (response.status === 200) {
+    yield put(setDescriptors(response.data));
+  } else {
+    console.log('error');
+  }
+}
+
 export default function* loginSaga() {
   yield takeLatest(MAKE_LOGIN, makeLogin);
   yield takeLatest(MAKE_TIME_IN, makeTimeIn);
   yield takeLatest(MAKE_TIME_OUT, makeTimeOut);
   yield takeLatest(MAKE_TODAY_LOGS, makeTodayLogs);
   yield takeLatest(MAKE_LOGOUT, makeLogout);
+  yield takeLatest(MAKE_GET_DESCRIPTORS, makeGetDescriptors);
 }

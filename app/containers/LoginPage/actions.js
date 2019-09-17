@@ -15,19 +15,21 @@
  *    }
  */
 
-import { 
-  CHANGE_USERNAME, 
-  MAKE_LOGIN, 
-  SET_LOGIN, 
-  MAKE_TIME_IN, 
-  MAKE_TIME_OUT, 
-  MAKE_TODAY_LOGS, 
-  SET_DIALOG, 
-  SET_USER, 
-  SET_RECORDS, 
-  SET_RECORD, 
+import {
+  CHANGE_USERNAME,
+  MAKE_LOGIN,
+  SET_LOGIN,
+  MAKE_TIME_IN,
+  MAKE_TIME_OUT,
+  MAKE_TODAY_LOGS,
+  SET_DIALOG,
+  SET_USER,
+  SET_RECORDS,
+  SET_RECORD,
   SET_LOADING,
-  MAKE_LOGOUT
+  MAKE_LOGOUT,
+  MAKE_GET_DESCRIPTORS,
+  SET_DESCRIPTORS,
 } from './types';
 
 /**
@@ -47,56 +49,65 @@ export function changeUsername(username) {
 export const makeLogin = (email, password) => ({
   type: MAKE_LOGIN,
   email,
-  password
+  password,
 });
 
-export const makeTimeIn = (payload) => ({
+export const makeTimeIn = payload => ({
   type: MAKE_TIME_IN,
-  payload
+  payload,
 });
 
-export const makeTimeOut = (payload) => ({
+export const makeTimeOut = payload => ({
   type: MAKE_TIME_OUT,
-  payload
+  payload,
 });
 
 export const makeTodayLogs = (email, password) => ({
   type: MAKE_TODAY_LOGS,
   email,
-  password
+  password,
 });
 
 export const setLogin = (token, user) => ({
   type: SET_LOGIN,
   token,
-  user
+  user,
 });
 
-export const setDialog = (status) => ({
+export const setDialog = status => ({
   type: SET_DIALOG,
-  status
+  status,
 });
 
-export const setUser = (user) => ({
+export const setUser = user => ({
   type: SET_USER,
-  user
+  user,
 });
 
-export const setRecords = (records) => ({
+export const setRecords = records => ({
   type: SET_RECORDS,
-  records
+  records,
 });
 
-export const setRecord = (record) => ({
+export const setRecord = record => ({
   type: SET_RECORD,
-  record
+  record,
 });
 
-export const setLoading = (status) => ({
+export const setLoading = status => ({
   type: SET_LOADING,
-  status
+  status,
 });
 
 export const makeLogout = () => ({
-  type: MAKE_LOGOUT
+  type: MAKE_LOGOUT,
+});
+
+export const makeGetDescriptors = () => ({
+  type: MAKE_GET_DESCRIPTORS,
+});
+
+export const setDescriptors = descriptors => ({
+  type: SET_DESCRIPTORS,
+  descriptors,
 });

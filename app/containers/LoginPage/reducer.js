@@ -9,7 +9,16 @@
 
 import produce from 'immer';
 
-import { CHANGE_USERNAME, SET_LOGIN, SET_DIALOG, SET_USER, SET_RECORDS, SET_RECORD, SET_LOADING } from './types';
+import {
+  CHANGE_USERNAME,
+  SET_LOGIN,
+  SET_DIALOG,
+  SET_USER,
+  SET_RECORDS,
+  SET_RECORD,
+  SET_LOADING,
+  SET_DESCRIPTORS,
+} from './types';
 
 // The initial state of the App
 export const initialState = {
@@ -21,7 +30,8 @@ export const initialState = {
   currentUser: {},
   records: [],
   record: {},
-  loading: false
+  loading: false,
+  descriptors: null,
 };
 
 /* eslint-disable default-case, no-param-reassign */
@@ -50,6 +60,22 @@ const loginReducer = (state = initialState, action) =>
         break;
       case SET_LOADING:
         draft.loading = action.status;
+        break;
+      case SET_DESCRIPTORS:
+        const newDescriptors = {};
+        action.descriptors.forEach(desc => {
+          const key = Object.keys(desc.descriptor)[0];
+          const descArr = desc.descriptor[key].descriptors[0];
+          const newDesc = Object.keys(descArr).map(k => descArr[k]);
+          newDescriptors[key] = {
+            // id: desc.id,
+            // userId: desc.userId,
+            name: desc.descriptor[key].name,
+            descriptors: [new Float32Array(newDesc)],
+          };
+        });
+
+        draft.descriptors = newDescriptors;
         break;
     }
   });
