@@ -8,6 +8,7 @@ import {
   MAKE_TODAY_LOGS,
   MAKE_LOGOUT,
   MAKE_GET_DESCRIPTORS,
+  MAKE_REGISTER_USER
 } from './types';
 import {
   setLogin,
@@ -111,6 +112,30 @@ export function* makeGetDescriptors() {
   }
 }
 
+export function* makeRegisterUser(action) {
+  const { registration, newProfile } = action;
+  const url = 'http://localhost:5000/users';
+  const options = {
+    ...registration,
+  };
+  const response = yield call(request, url, options);
+  if (response.status === 200) {
+    const desUrl = 'http://localhost:5000/descriptors';
+    const desOptions = {
+      userId: response.data.id,
+      descriptor: {...newProfile}
+    }
+    const saveDescriptors = yield call(request, desUrl, desOptions);
+    if (saveDescriptors.status === 200) {
+      console.log('registered user');
+    } else {
+      console.log('failed saving descriptors');
+    }
+  } else {
+    console.log('failed registering user');
+  }
+}
+
 export default function* loginSaga() {
   yield takeLatest(MAKE_LOGIN, makeLogin);
   yield takeLatest(MAKE_TIME_IN, makeTimeIn);
@@ -118,4 +143,5 @@ export default function* loginSaga() {
   yield takeLatest(MAKE_TODAY_LOGS, makeTodayLogs);
   yield takeLatest(MAKE_LOGOUT, makeLogout);
   yield takeLatest(MAKE_GET_DESCRIPTORS, makeGetDescriptors);
+  yield takeLatest(MAKE_REGISTER_USER, makeRegisterUser);
 }

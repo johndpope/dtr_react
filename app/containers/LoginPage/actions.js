@@ -30,6 +30,7 @@ import {
   MAKE_LOGOUT,
   MAKE_GET_DESCRIPTORS,
   SET_DESCRIPTORS,
+  MAKE_REGISTER_USER,
 } from './types';
 
 /**
@@ -110,4 +111,10 @@ export const makeGetDescriptors = () => ({
 export const setDescriptors = descriptors => ({
   type: SET_DESCRIPTORS,
   descriptors,
+});
+
+export const makeRegisterUser = (registration, newProfile) => ({
+  type: MAKE_REGISTER_USER,
+  registration,
+  newProfile,
 });

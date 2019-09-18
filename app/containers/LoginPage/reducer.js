@@ -75,6 +75,8 @@ const loginReducer = (state = initialState, action) =>
           };
         });
 
+        
+
         draft.descriptors = newDescriptors;
         break;
     }

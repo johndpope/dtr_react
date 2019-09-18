@@ -67,9 +67,10 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import CameraIcon from '@material-ui/icons/CameraAlt';
 
 import { withStyles, createMuiTheme } from '@material-ui/core/styles';
-import { makeLogin, makeTimeIn, makeTimeOut, setDialog, setUser, setRecords, setRecord, makeTodayLogs, setLoading, makeGetDescriptors } from './actions';
+import { makeLogin, makeTimeIn, makeTimeOut, setDialog, setUser, setRecords, setRecord, makeTodayLogs, setLoading, makeGetDescriptors, makeRegisterUser } from './actions';
 import { DEFAULT_STYLES } from './constants';
 // import * as faceapi from 'face-api.js';
 // const MODEL_URL = 'models';
@@ -78,8 +79,8 @@ import { DEFAULT_STYLES } from './constants';
 
 const JSON_PROFILE = require('../../descriptors/bnk48.json');
 
-const WIDTH = 420;
-const HEIGHT = 420;
+const WIDTH = 330;
+const HEIGHT = 330;
 const inputSize = 160;
 
 // Initial State
@@ -122,6 +123,17 @@ class LoginPage extends React.PureComponent {
       match: null,
       facingMode: null,
       newDescriptors: null,
+      openFaceDetector: false,
+      openRegisterUser: false,
+      registration: {
+        email: '',
+        username: '',
+        password: '',
+        employeeId: '',
+        firstName: '',
+        lastName: '',
+      },
+      newProfile: {}
     };
   }
 
@@ -150,7 +162,7 @@ class LoginPage extends React.PureComponent {
       facingMode: 'user',
     });
 
-    this.startCapture();
+    // this.startCapture();
     // navigator.mediaDevices.enumerateDevices().then(async devices => {
     //   let inputDevice = await devices.filter(
     //     device => device.kind === 'videoinput'
@@ -171,6 +183,12 @@ class LoginPage extends React.PureComponent {
   startCapture = () => {
     this.interval = setInterval(() => {
       this.capture();
+    }, 1500);
+  };
+
+  startContiniousCapture = () => {
+    this.interval = setInterval(() => {
+      this.continuousCapture();
     }, 1500);
   };
 
@@ -196,42 +214,82 @@ class LoginPage extends React.PureComponent {
         const match = await this.state.descriptors.map(descriptor =>
           this.state.faceMatcher.findBestMatch(descriptor),
         );
+        clearInterval(this.interval);
+        this.setState({ match });
+      }
+    }
+  };
+
+  continuousCapture = async () => {
+    if (this.webcam.current) {
+      await getFullFaceDescription(
+        this.webcam.current.getScreenshot(),
+        inputSize,
+      ).then(fullDesc => {
+        if (fullDesc) {
+          this.setState({
+            detections: fullDesc.map(fd => fd.detection),
+            descriptors: fullDesc.map(fd => fd.descriptor),
+          });
+        }
+      });
+
+      if (!!this.state.descriptors && !!this.state.faceMatcher) {
+        const match = await this.state.descriptors.map(descriptor =>
+          this.state.faceMatcher.findBestMatch(descriptor),
+        );
         this.setState({ match });
       }
     }
   };
 
   saveDescriptor = async () => {
-    if (this.webcam.current) {
-      await getFullFaceDescription(
-        this.webcam.current.getScreenshot(),
-        inputSize,
-      ).then(async fullDesc => {
-        if (fullDesc) {
-          const descriptor = fullDesc.map(fd => fd.descriptor);
-          const newProfile = {
-            Alvin: {
-              name: 'alvin',
-              descriptors: descriptor,
-            },
-          };
-          this.setState({
-            newDescriptors: newProfile,
-            faceMatcher: await createMatcher(newProfile),
-            // detections: fullDesc.map(fd => fd.detection),
-            // descriptors: fullDesc.map(fd => fd.descriptor)
-          });
-        }
-      });
-
-      // if (!!this.state.descriptors && !!this.state.faceMatcher) {
-      //   let match = await this.state.descriptors.map(descriptor =>
-      //     this.state.faceMatcher.findBestMatch(descriptor)
-      //   );
-      //   this.setState({ match });
-      // }
+    if(this.state.registration.username !== '') {
+      const username = this.state.registration.username;
+      if (this.webcam.current) {
+        await getFullFaceDescription(
+          this.webcam.current.getScreenshot(),
+          inputSize,
+        ).then(async fullDesc => {
+          if (fullDesc) {
+            const descriptor = fullDesc.map(fd => fd.descriptor);
+            const newProfile = {
+              [`${username}`]: {
+                name: this.state.registration.username,
+                descriptors: descriptor,
+              },
+            };
+            this.setState({
+              newProfile
+            });
+          }
+        });
+      }
     }
   };
+
+  // saveDescriptor = async () => {
+  //   if (this.webcam.current) {
+  //     await getFullFaceDescription(
+  //       this.webcam.current.getScreenshot(),
+  //       inputSize,
+  //     ).then(async fullDesc => {
+  //       if (fullDesc) {
+  //         const descriptor = fullDesc.map(fd => fd.descriptor);
+  //         const newProfile = {
+  //           Alvin: {
+  //             name: 'alvin',
+  //             descriptors: descriptor,
+  //           },
+  //         };
+  //         this.setState({
+  //           newDescriptors: newProfile,
+  //           faceMatcher: await createMatcher(newProfile),
+  //         });
+  //       }
+  //     });
+  //   }
+  // };
 
   // handleImage = async (image = this.state.imageURL) => {
   //   await getFullFaceDescription(image).then(fullDesc => {
@@ -424,6 +482,60 @@ class LoginPage extends React.PureComponent {
     });
   };
 
+  handleOpenFaceDetector = () => {
+    this.startCapture();
+    this.setState({
+      facingMode: 'user',
+      openFaceDetector: true
+    });
+  }
+
+  handleCloseFaceDetector = () => {
+    clearInterval(this.interval);
+    this.setState({
+      fullDesc: null,
+      detections: null,
+      descriptors: null,
+      match: null,
+      openFaceDetector: false,
+    })
+  }
+
+  handleOpenRegisterUser = () => {
+    this.startCapture();
+    this.setState({
+      facingMode: 'user',
+      openRegisterUser: true
+    });
+  }
+
+  handleCloseRegisterUser = () => {
+    clearInterval(this.interval);
+    this.setState({
+      fullDesc: null,
+      detections: null,
+      descriptors: null,
+      match: null,
+      openRegisterUser: false
+    });
+  }
+
+  handleChangeInputRegistration = (e, field) => {
+    const stateReg = this.state.registration;
+    let registration = {
+      ...stateReg,
+      [field]: e.target.value,
+    }
+    this.setState({
+      registration
+    });
+  }
+
+  handleRegisterUser = () => {
+    const { registration, newProfile } = this.state;
+    this.props.onMakeRegisterUser(registration, newProfile);
+  }
+
   render() {
     const {
       classes,
@@ -476,13 +588,18 @@ class LoginPage extends React.PureComponent {
         const _W = detection.box.width;
         const _X = detection.box._x;
         const _Y = detection.box._y;
+
+        if (this.state.openRegisterUser) {
+          return null;
+        }
+
         return (
           <div key={i}>
             <div
               style={{
                 position: 'absolute',
                 border: 'solid',
-                borderColor: 'blue',
+                borderColor: '#285584',
                 height: _H,
                 width: _W,
                 transform: `translate(${_X}px,${_Y}px)`,
@@ -491,9 +608,9 @@ class LoginPage extends React.PureComponent {
               {!!match && !!match[i] ? (
                 <p
                   style={{
-                    backgroundColor: 'blue',
+                    backgroundColor: '#285584',
                     border: 'solid',
-                    borderColor: 'blue',
+                    borderColor: '#285584',
                     width: _W,
                     marginTop: 0,
                     color: '#fff',
@@ -687,46 +804,185 @@ class LoginPage extends React.PureComponent {
                       )}
                     </Popper>
                   </Grid>
+
+                  <Grid
+                    item
+                    container
+                    xs={12}
+                    style={{ marginTop: 20 }}
+                  >
+                    <IconButton onClick={this.handleOpenFaceDetector}>
+                      <CameraIcon />
+                    </IconButton>
+
+                    <IconButton onClick={this.handleOpenRegisterUser}>
+                      <AccountCircle />
+                    </IconButton>
+                    
+                  </Grid>
                 </Grid>
               </form>
               {/* <span>{this.props.listening ? 'listening': 'not listening'}</span> */}
               {/* <p>{`Transcript: ${this.props.transcript}`}</p> */}
-              <div
-                className="Camera"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                }}
-              >
-                <p>Camera: {camera}</p>
-                <div
-                  style={{
-                    width: WIDTH,
-                    height: HEIGHT,
-                  }}
-                >
-                  <div style={{ position: 'relative', width: WIDTH }}>
-                    {videoConstraints ? (
-                      <div style={{ position: 'absolute' }}>
-                        <Webcam
-                          audio={false}
-                          width={WIDTH}
-                          height={HEIGHT}
-                          ref={this.webcam}
-                          screenshotFormat="image/jpeg"
-                          videoConstraints={videoConstraints}
-                        />
-                      </div>
-                    ) : null}
-                    {drawBox ? drawBox : null}
-                    <Button onClick={this.saveDescriptor}>
-                      Save Descriptor
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              
             </Grid>
+
+            <Dialog open={this.state.openRegisterUser}>
+              <DialogContent style={{ overflowX: 'hidden' }}>
+                <span onClick={this.handleCloseRegisterUser}>X</span>
+                <Grid container style={{ width: WIDTH + 80, marginTop: 10 }}>
+                        <Grid item xs={12}> 
+                          {videoConstraints ? (
+                            <div>
+                              <Webcam
+                                audio={false}
+                                width={WIDTH + 60}
+                                height={HEIGHT}
+                                ref={this.webcam}
+                                screenshotFormat="image/jpeg"
+                                videoConstraints={videoConstraints}
+                              />
+                            </div>
+                          ) : null}
+                          {drawBox ? drawBox : null}
+                          {/* <Button onClick={this.saveDescriptor}>
+                            Save Descriptor
+                          </Button> */}
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <IconButton onClick={this.saveDescriptor} style={{
+                            color: Object.keys(this.state.newProfile).length > 0 ? 'red' : 'gray'
+                          }}>
+                            <CameraIcon />
+                          </IconButton>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <TextField
+                            value={this.state.registration.email}
+                            onChange={(e) => this.handleChangeInputRegistration(e, 'email')}
+                            fullWidth
+                            placeholder="Email"
+                            type="text"
+                            style={{ marginTop: 15, marginLeft: 5 }}
+                          />
+                        </Grid> 
+
+                        <Grid item xs={12}>
+                          <TextField
+                            value={this.state.registration.username}
+                            onChange={(e) => this.handleChangeInputRegistration(e, 'username')}
+                            fullWidth
+                            placeholder="Username"
+                            type="text"
+                            style={{ marginTop: 15, marginLeft: 5 }}
+                          />
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <TextField
+                            value={this.state.registration.password}
+                            onChange={(e) => this.handleChangeInputRegistration(e, 'password')}
+                            fullWidth
+                            placeholder="Password"
+                            type="password"
+                            style={{ marginTop: 15, marginLeft: 5 }}
+                          />
+                        </Grid> 
+
+                        <Grid item xs={12}>
+                          <TextField
+                            value={this.state.registration.firstName}
+                            onChange={(e) => this.handleChangeInputRegistration(e, 'firstName')}
+                            fullWidth
+                            placeholder="First Name"
+                            type="text"
+                            style={{ marginTop: 15, marginLeft: 5 }}
+                          />
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <TextField
+                            value={this.state.registration.lastName}
+                            onChange={(e) => this.handleChangeInputRegistration(e, 'lastName')}
+                            fullWidth
+                            placeholder="Last Name"
+                            type="text"
+                            style={{ marginTop: 15, marginLeft: 5 }}
+                          />
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <TextField
+                            value={this.state.registration.employeeId}
+                            onChange={(e) => this.handleChangeInputRegistration(e, 'employeeId')}
+                            fullWidth
+                            placeholder="Employee ID"
+                            type="text"
+                            style={{ marginTop: 15, marginLeft: 5 }}
+                          />
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <Button 
+                            fullWidth
+                            variant="contained"
+                            color="primary" 
+                            onClick={this.handleRegisterUser}
+                            style={{ marginTop: 15 }}
+                          >
+                            Register
+                          </Button>  
+                        </Grid>         
+                </Grid>
+                
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={this.state.openFaceDetector}>
+                <DialogContent style={{ overflow: 'hidden' }}>
+                  <span onClick={this.handleCloseFaceDetector}>X</span>
+                  <div
+                    className="Camera"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {/* <p>Camera: {camera}</p> */}
+                    <CameraIcon size={150} />
+                    <div
+                      style={{
+                        width: WIDTH + 1,
+                        height: HEIGHT + 1,
+                        marginTop: 20,
+                        border: '1px solid gray'
+                      }}
+                    >
+                      <div style={{ position: 'relative', width: WIDTH }}>
+                        {videoConstraints ? (
+                          <div style={{ position: 'absolute' }}>
+                            <Webcam
+                              audio={false}
+                              width={WIDTH}
+                              height={HEIGHT}
+                              ref={this.webcam}
+                              screenshotFormat="image/jpeg"
+                              videoConstraints={videoConstraints}
+                            />
+                          </div>
+                        ) : null}
+                        {drawBox ? drawBox : null}
+                        {/* <Button onClick={this.saveDescriptor}>
+                          Save Descriptor
+                        </Button> */}
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={openDialog} onEnter={this.handleOpenDialog}>
               <DialogContent style={{ height: 700, width: 450 }}>
@@ -839,6 +1095,7 @@ export function mapDispatchToProps(dispatch) {
     onSetRecord: record => dispatch(setRecord(record)),
     onSetLoading: status => dispatch(setLoading(status)),
     onMakeGetDescriptors: () => dispatch(makeGetDescriptors()),
+    onMakeRegisterUser: (registration, newProfile) => dispatch(makeRegisterUser(registration, newProfile)),
   };
 }
 
