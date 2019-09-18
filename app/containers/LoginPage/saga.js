@@ -127,12 +127,12 @@ export function* makeRegisterUser(action) {
     }
     const saveDescriptors = yield call(request, desUrl, desOptions);
     if (saveDescriptors.status === 200) {
-      console.log('registered user');
+      alert('registered user');
     } else {
-      console.log('failed saving descriptors');
+      alert('failed saving descriptors');
     }
   } else {
-    console.log('failed registering user');
+    alert('failed registering user');
   }
 }
 
