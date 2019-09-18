@@ -159,26 +159,26 @@ class LoginPage extends React.PureComponent {
   };
 
   setInputDevice = async () => {
-    await this.setState({
-      facingMode: 'user',
-    });
+    // await this.setState({
+    //   facingMode: 'user',
+    // });
 
     // this.startCapture();
-    // navigator.mediaDevices.enumerateDevices().then(async devices => {
-    //   let inputDevice = await devices.filter(
-    //     device => device.kind === 'videoinput'
-    //   );
-    //   if (inputDevice.length < 2) {
-    //     await this.setState({
-    //       facingMode: 'user'
-    //     });
-    //   } else {
-    //     await this.setState({
-    //       facingMode: { exact: 'environment' }
-    //     });
-    //   }
-    //   this.startCapture();
-    // });
+    navigator.mediaDevices.enumerateDevices().then(async devices => {
+      let inputDevice = await devices.filter(
+        device => device.kind === 'videoinput'
+      );
+      if (inputDevice.length < 2) {
+        await this.setState({
+          facingMode: 'user'
+        });
+      } else {
+        await this.setState({
+          facingMode: { exact: 'environment' }
+        });
+      }
+      this.startCapture();
+    });
   };
 
   startCapture = () => {
