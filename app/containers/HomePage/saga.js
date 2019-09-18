@@ -4,6 +4,7 @@ import { getRequest, postRequest } from 'utils/request';
 import { setResponse, setLoading } from './actions';
 import axios from 'axios';
 import moment from 'moment';
+import { basePath } from '../../config';
 
 const downloadFile = (url, param) => {
   return axios({
@@ -23,7 +24,7 @@ export function* makeExportExcel(action) {
   startMoment.set({hour:0,minute:0,second:0,millisecond:999});
   let endMoment = moment(endDate);
   endMoment.set({hour:23,minute:59,second:59,millisecond:999});
-  const url = 'http://localhost:5000/record/export_excel';
+  const url = `${basePath}/record/export_excel`;
   const param = {
     startDate: startMoment.toISOString(),
     endDate: endMoment.toISOString(),

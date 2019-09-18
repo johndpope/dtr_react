@@ -198,7 +198,6 @@ class LoginPage extends React.PureComponent {
 
   capture = async () => {
     if (this.webcam.current) {
-      console.log('this.webcam.current.getScreenshot()', this.webcam.current.getScreenshot());
       await getFullFaceDescription(
         this.webcam.current.getScreenshot(),
         inputSize,

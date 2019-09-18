@@ -20,10 +20,12 @@ import {
   setDescriptors,
 } from './actions';
 
+import { basePath } from '../../config';
+
 export function* makeLogin(action) {
   yield put(setLoading(true));
   const { email, password } = action;
-  const url = 'http://localhost:5000/users/login';
+  const url = `${basePath}/users/login`;
   const options = {
     email,
     password,
@@ -40,7 +42,7 @@ export function* makeLogin(action) {
 export function* makeTimeIn(action) {
   yield put(setLoading(true));
   const { email, password, time, remarks, customDate } = action.payload;
-  const url = 'http://localhost:5000/record/timein';
+  const url = `${basePath}/record/timein`;
   const options = {
     email,
     password,
@@ -60,7 +62,7 @@ export function* makeTimeIn(action) {
 export function* makeTimeOut(action) {
   yield put(setLoading(true));
   const { email, password, time, remarks, customDate } = action.payload;
-  const url = 'http://localhost:5000/record/timeout';
+  const url = `${basePath}/record/timeout`;
   const options = {
     email,
     password,
@@ -81,7 +83,7 @@ export function* makeTimeOut(action) {
 export function* makeTodayLogs(action) {
   yield put(setLoading(true));
   const { email, password } = action;
-  const url = 'http://localhost:5000/record/today_logs';
+  const url = `${basePath}/record/today_logs`;
   const options = {
     email,
     password,
@@ -103,7 +105,7 @@ export function* makeLogout() {
 }
 
 export function* makeGetDescriptors() {
-  const url = 'http://localhost:5000/descriptors';
+  const url = `${basePath}/descriptors`;
   const response = yield call(getRequest, url);
   if (response.status === 200) {
     yield put(setDescriptors(response.data));
@@ -114,13 +116,13 @@ export function* makeGetDescriptors() {
 
 export function* makeRegisterUser(action) {
   const { registration, newProfile } = action;
-  const url = 'http://localhost:5000/users';
+  const url = `${basePath}/users`;
   const options = {
     ...registration,
   };
   const response = yield call(request, url, options);
   if (response.status === 200) {
-    const desUrl = 'http://localhost:5000/descriptors';
+    const desUrl = `${basePath}/descriptors`;
     const desOptions = {
       userId: response.data.id,
       descriptor: {...newProfile}
