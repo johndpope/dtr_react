@@ -159,32 +159,32 @@ class LoginPage extends React.PureComponent {
   };
 
   setInputDevice = async () => {
-    // await this.setState({
-    //   facingMode: 'user',
-    // });
+    await this.setState({
+      facingMode: 'user',
+    });
 
     // this.startCapture();
-    navigator.mediaDevices.enumerateDevices().then(async devices => {
-      let inputDevice = await devices.filter(
-        device => device.kind === 'videoinput'
-      );
-      if (inputDevice.length < 2) {
-        await this.setState({
-          facingMode: 'user'
-        });
-      } else {
-        await this.setState({
-          facingMode: { exact: 'environment' }
-        });
-      }
-      this.startCapture();
-    });
+    // navigator.mediaDevices.enumerateDevices().then(async devices => {
+    //   let inputDevice = await devices.filter(
+    //     device => device.kind === 'videoinput'
+    //   );
+    //   if (inputDevice.length < 2) {
+    //     await this.setState({
+    //       facingMode: 'user'
+    //     });
+    //   } else {
+    //     await this.setState({
+    //       facingMode: { exact: 'environment' }
+    //     });
+    //   }
+    //   this.startCapture();
+    // });
   };
 
   startCapture = () => {
     this.interval = setInterval(() => {
       this.capture();
-    }, 3000);
+    }, 1500);
   };
 
   startContiniousCapture = () => {
@@ -215,7 +215,7 @@ class LoginPage extends React.PureComponent {
         const match = await this.state.descriptors.map(descriptor =>
           this.state.faceMatcher.findBestMatch(descriptor),
         );
-        // clearInterval(this.interval);
+        clearInterval(this.interval);
         this.setState({ match });
       }
     }
