@@ -26,6 +26,7 @@ import SpeechRecognition from "react-speech-recognition";
 import { loadModels, getFullFaceDescription, createMatcher } from '../../api/face';
 
 import Webcam from 'react-webcam';
+import { basePath } from '../../config';
 
 import {
   Avatar,
@@ -1004,7 +1005,7 @@ class LoginPage extends React.PureComponent {
 
                   {user.hasOwnProperty('profilePic') ? (
                     <Avatar
-                      src={`http://localhost:5000/images/${user.profilePic}`}
+                      src={`${basePath}/images/${user.profilePic}`}
                       style={{ height: 100, width: 100 }}
                     />
                   ) : (
