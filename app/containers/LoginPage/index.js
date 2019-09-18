@@ -184,7 +184,7 @@ class LoginPage extends React.PureComponent {
   startCapture = () => {
     this.interval = setInterval(() => {
       this.capture();
-    }, 1500);
+    }, 3000);
   };
 
   startContiniousCapture = () => {
