@@ -198,6 +198,7 @@ class LoginPage extends React.PureComponent {
 
   capture = async () => {
     if (this.webcam.current) {
+      console.log('this.webcam.current.getScreenshot()', this.webcam.current.getScreenshot());
       await getFullFaceDescription(
         this.webcam.current.getScreenshot(),
         inputSize,
@@ -214,7 +215,7 @@ class LoginPage extends React.PureComponent {
         const match = await this.state.descriptors.map(descriptor =>
           this.state.faceMatcher.findBestMatch(descriptor),
         );
-        clearInterval(this.interval);
+        // clearInterval(this.interval);
         this.setState({ match });
       }
     }

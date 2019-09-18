@@ -6,7 +6,6 @@ export async function loadModels() {
   await faceapi.loadTinyFaceDetectorModel(MODEL_URL);
   await faceapi.loadFaceLandmarkTinyModel(MODEL_URL);
   await faceapi.loadFaceRecognitionModel(MODEL_URL);
-  console.log('success');
 }
 
 export async function getFullFaceDescription(blob, inputSize = 512) {
@@ -32,7 +31,6 @@ export async function getFullFaceDescription(blob, inputSize = 512) {
 
 const maxDescriptorDistance = 0.5;
 export async function createMatcher(faceProfile) {
-  console.log('faceProfile', faceProfile);
   // Create labeled descriptors of member from profile
   const members = Object.keys(faceProfile);
   // console.log('members', members);
